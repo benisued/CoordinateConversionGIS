@@ -1,0 +1,49 @@
+# -*- coding: utf-8 -*-
+import arcpy
+
+# For when Coordinate looks like this: WGS84 GEO 36N xx.xxxx°E xx.xxxx°N
+def Model1():  # Model1
+
+    # To allow overwriting outputs change overwriteOutput option to True.
+    arcpy.env.overwriteOutput = False
+
+    # ArcGis installation folder
+    arcpy.ImportToolbox(r"c:\program files\arcgis\pro\Resources\ArcToolbox\toolboxes\Conversion Tools.tbx")
+
+    # yout input table
+    test_UTM_xlsx = "C:\\Users\\..."
+
+    # Process: Excel To Table (Excel To Table) (conversion)
+    #gdb adress
+    testUTM_ExcelToTable3 = "C:\\Users\\MyProject.gdb\\testUTM_ExcelToTable3"
+    arcpy.conversion.ExcelToTable(Input_Excel_File=test_UTM_xlsx, Output_Table=testUTM_ExcelToTable3, Sheet="", field_names_row=1, cell_range="")
+
+    # Process: Add Field (Add Field) (management)
+    #add field "x"
+    Updated_Input_Table_2_ = arcpy.management.AddField(in_table=testUTM_ExcelToTable3, field_name="x", field_type="TEXT", field_precision=None, field_scale=None, field_length=None, field_alias="", field_is_nullable="NULLABLE", field_is_required="NON_REQUIRED", field_domain="")[0]
+
+    # Process: Add Field (2) (Add Field) (management)
+    # add field "y"
+    Updated_Input_Table_3_ = arcpy.management.AddField(in_table=Updated_Input_Table_2_, field_name="y", field_type="TEXT", field_precision=None, field_scale=None, field_length=None, field_alias="", field_is_nullable="NULLABLE", field_is_required="NON_REQUIRED", field_domain="")[0]
+
+    # Process: Calculate Field (Calculate Field) (management)
+    #splits into xx.xxxx°E and removes °E
+    Updated_Input_Table = arcpy.management.CalculateField(in_table=Updated_Input_Table_3_, field="x", expression="!utm!.split()[3].replace(\"°\",\"\").replace(\"E\",\"\")", expression_type="PYTHON3", code_block="", field_type="TEXT", enforce_domains="NO_ENFORCE_DOMAINS")[0]
+
+    # Process: Calculate Field (2) (Calculate Field) (management)
+    # splits into xx.xxxx°N and removes °N
+    Updated_Input_Table_4_ = arcpy.management.CalculateField(in_table=Updated_Input_Table, field="y", expression="!utm!.split()[4].replace(\"°\",\"\").replace(\"N\",\"\")", expression_type="PYTHON3", code_block="", field_type="TEXT", enforce_domains="NO_ENFORCE_DOMAINS")[0]
+
+    # Process: Convert Coordinate Notation (Convert Coordinate Notation) (management)
+    #turns it into points using convert coordinate notation dd2 to dd2 (xy table to point would also work)
+    testUTM_ExcelT_ConvertCoordi3 = "C:\\Users\\MyProject.gdb\\testUTM_ExcelT_ConvertCoordi3"
+    arcpy.management.ConvertCoordinateNotation(in_table=Updated_Input_Table_4_, out_featureclass=testUTM_ExcelT_ConvertCoordi3, x_field="X", y_field="y", input_coordinate_format="DD_2", output_coordinate_format="DD_2", id_field="", spatial_reference="GEOGCS[\"GCS_WGS_1984\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137.0,298.257223563]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]];-400 -400 1000000000;-100000 10000;-100000 10000;8.98315284119521E-09;0.001;0.001;IsHighPrecision", in_coor_system="GEOGCS[\"GCS_WGS_1984\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137.0,298.257223563]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]]", exclude_invalid_records="INCLUDE_INVALID")
+
+    # Process: Add XY Coordinates (Add XY Coordinates) (management)
+    #optional
+    Updated_Input_Features = arcpy.management.AddXY(in_features=testUTM_ExcelT_ConvertCoordi3)[0]
+
+if __name__ == '__main__':
+    # Global Environment settings
+    with arcpy.EnvManager(scratchWorkspace=r"C:\Users\MyProject.gdb", workspace=r"C:\Users\MyProject\MyProject.gdb"):
+        Model1()
